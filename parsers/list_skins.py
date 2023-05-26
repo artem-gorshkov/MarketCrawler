@@ -4,6 +4,7 @@ from anticloudflare import AntiCloudflare
 from dbconnector import Connector
 from item import LisSkinsItem, str_to_enum
 from bs4 import BeautifulSoup
+import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from parsers.utils import form_item_key, write_to_buffer, update_etln
@@ -13,13 +14,7 @@ class LisSkins:
     URL = "https://lis-skins.ru/market/csgo/?sort_by=popularity&page="
     MAX_PAGES = 5
 
-    credentials = {
-        "user": "etl",
-        "password": "etl_pass",
-        "host": "192.168.0.199",
-        "database": "market",
-        "port": 5432,
-    }
+    credentials = json.load(open('credentials.json'))
 
     def __init__(self):
         self._session = AntiCloudflare()
