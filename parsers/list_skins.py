@@ -1,13 +1,12 @@
-import hashlib
 from datetime import datetime
-from io import StringIO
 
 from anticloudflare import AntiCloudflare
 from dbconnector import Connector
 from item import LisSkinsItem, str_to_enum
 from bs4 import BeautifulSoup
-import csv
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
+from parsers.utils import form_item_key, write_to_buffer, update_etln
 
 
 class LisSkins:
@@ -19,7 +18,7 @@ class LisSkins:
         "password": "etl_pass",
         "host": "192.168.0.199",
         "database": "market",
-        "port": 5432
+        "port": 5432,
     }
 
     def __init__(self):
@@ -43,27 +42,31 @@ class LisSkins:
     def _parse_item(self, item: BeautifulSoup) -> LisSkinsItem:
         parsed = {
             "name": item.find_all("div", {"class": "name-inner"})[0].text,
-            "price": item.find_all("div", {"class": "price"})[0].text.replace(' ', ''),
+            "price": item.find_all("div", {"class": "price"})[0].text.replace(" ", ""),
             "url": item.find_all("a", href=True)[0]["href"],
         }
-        try:
-            parsed.update(
-                {"quality": str_to_enum(item.find_all("div", {"class": "name-exterior"})[0].text)}
-            )
-        except IndexError:
-            pass
-        try:
-            parsed.update(
-                {
-                    "market_cup": item.find_all("div", {"class": "similar-count"})[
-                        0
-                    ].text.replace("x", "")
-                }
-            )
-        except IndexError:
-            pass
-        parsed |= {"item_key": self._form_item_key(parsed)}
+
+        if quality := item.find_all("div", {"class": "name-exterior"}):
+            parsed["quality"] = str_to_enum(quality[0].text)
+
+        if market_cup := item.find_all("div", {"class": "similar-count"}):
+            parsed["market_cup"] = market_cup[0].text.replace("x", "")
+
+        parsed |= {"item_key": form_item_key(parsed)}
         return LisSkinsItem(**parsed)
+
+    def _form_db_transaction(self, batch: dict[LisSkinsItem]):
+        time = datetime.now()
+        batch = [
+            (time, item.item_key, item.price, item.url, item.market_cup)
+            for item in batch.values()
+        ]
+
+        header = ["status_timestamp", "item_key", "price", "url", "market_cup"]
+
+        s_buf = write_to_buffer(batch)
+
+        self._connector.write_data(s_buf, "lis_skins", header)
 
     def update_market_status(self, n_workers=3):
         result = []
@@ -81,49 +84,7 @@ class LisSkins:
         result = {item.name: item for item in result}
 
         self._form_db_transaction(result)
-        self._update_etln(result)
-
-    @staticmethod
-    def _write_to_buffer(batch: list[tuple]) -> StringIO:
-        s_buf = StringIO()
-        writer = csv.writer(s_buf)
-
-        writer.writerows(batch)
-
-        s_buf.seek(0)
-        return s_buf
-
-    def _form_db_transaction(self, batch: dict[LisSkinsItem]):
-        time = datetime.now()
-        batch = [(time, item.item_key, item.price, item.url, item.market_cup) for item in batch.values()]
-
-        header = ["status_timestamp", "item_key", "price", "url", "market_cup"]
-
-        s_buf = self._write_to_buffer(batch)
-
-        self._connector.write_data(s_buf, "lis_skins", header)
-
-    def _update_etln(self, batch: dict[LisSkinsItem]):
-        etln_data = set([item[0].replace('-', '') for item in self._connector.get_etln()])
-        curr_item_keys = set([item.item_key for item in batch.values()])
-
-        diff = curr_item_keys - etln_data
-
-        none_type_func = lambda item: item.quality.name if item.quality is not None else None
-
-        new_items = [(item.item_key, item.name, none_type_func(item), item.stattrack) for item in batch.values() if
-                     item.item_key in diff]
-
-        s_buf = self._write_to_buffer(new_items)
-
-        header = ['item_key', 'name', 'quality', 'stattrack']
-        self._connector.write_data(s_buf, 'item_etln', header)
-
-    @staticmethod
-    def _form_item_key(item) -> str:
-        return hashlib.md5(
-            f'{item.get("name")}#{item.get("quality")}#{item.get("stattrack")}'.encode()
-        ).hexdigest()
+        update_etln(self._connector, result)
 
 
 if __name__ == "__main__":

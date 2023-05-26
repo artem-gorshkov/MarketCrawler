@@ -11,17 +11,18 @@ class ItemQuality(Enum):
 
 
 str_to_enum_dict = {
-    'Factory New': ItemQuality.FactoryNew,
-    'Minimal Wear': ItemQuality.MinimalWear,
-    'Field-Tested': ItemQuality.FieldTested,
-    'Well-Worn': ItemQuality.WellWorn,
-    'Battle-Scarred': ItemQuality.BattleScarred
+    "Factory New": ItemQuality.FactoryNew,
+    "Minimal Wear": ItemQuality.MinimalWear,
+    "Field-Tested": ItemQuality.FieldTested,
+    "Well-Worn": ItemQuality.WellWorn,
+    "Battle-Scarred": ItemQuality.BattleScarred,
 }
 
 
 def str_to_enum(item):
-    item = item.replace('(', '').replace(')', '')
+    item = item.replace("(", "").replace(")", "")
     return str_to_enum_dict[item]
+
 
 @dataclass
 class Item:

@@ -12,7 +12,7 @@ class AntiCloudflare:
         self._options = uc.ChromeOptions()
         # self._options.headless = True
 
-        self._driver = uc.Chrome(driver_executable_path='./chromedriver')
+        self._driver = uc.Chrome(driver_executable_path="./chromedriver")
 
     def get(self, url: str) -> str:
         """
