@@ -25,7 +25,7 @@ class Connector:
         :return: set[str]: список ключей предметов
         """
         sql = """
-        select item_key from market.lis_skins;
+        select item_key from market.item_etln;
         """
 
         with self._connection.cursor() as cur:

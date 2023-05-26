@@ -12,7 +12,7 @@ from parsers.utils import form_item_key, write_to_buffer, update_etln
 
 class LisSkins:
     URL = "https://lis-skins.ru/market/csgo/?sort_by=popularity&page="
-    MAX_PAGES = 5
+    MAX_PAGES = 10
 
     credentials = json.load(open('credentials.json'))
 
@@ -78,7 +78,7 @@ class LisSkins:
 
         result = {item.name: item for item in result}
 
-        self._form_db_transaction(result)
+        #self._form_db_transaction(result)
         update_etln(self._connector, result)
 
 
