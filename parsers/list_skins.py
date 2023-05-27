@@ -14,7 +14,7 @@ class LisSkins:
     URL = "https://lis-skins.ru/market/csgo/?sort_by=popularity&page="
     MAX_PAGES = 10
 
-    credentials = json.load(open('credentials.json'))
+    credentials = json.load(open("../resources/credentials.json"))
 
     def __init__(self):
         self._session = AntiCloudflare()
@@ -78,7 +78,7 @@ class LisSkins:
 
         result = {item.name: item for item in result}
 
-        #self._form_db_transaction(result)
+        self._form_db_transaction(result)
         update_etln(self._connector, result)
 
 

@@ -7,6 +7,7 @@ class Connector:
     """
     Коннектор для упрощенного взаимодействия с БД
     """
+
     def __init__(self, credentials: dict):
         self._connection = ps.connect(**credentials)
 

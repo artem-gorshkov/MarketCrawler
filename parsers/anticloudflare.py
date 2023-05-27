@@ -1,4 +1,5 @@
 import undetected_chromedriver as uc
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 
 class AntiCloudflare:
@@ -11,8 +12,15 @@ class AntiCloudflare:
     def __init__(self):
         self._options = uc.ChromeOptions()
         # self._options.headless = True
+        caps = DesiredCapabilities().CHROME
+        caps["pageLoadStrategy"] = "eager"
+        self._options.add_argument("--lang=en")
 
-        self._driver = uc.Chrome(driver_executable_path="./chromedriver")
+        self._driver = uc.Chrome(
+            driver_executable_path="./chromedriver",
+            options=self._options,
+            desired_capabilities=caps,
+        )
 
     def get(self, url: str) -> str:
         """
@@ -27,4 +35,7 @@ class AntiCloudflare:
         return html
 
     def __del__(self):
+        self._driver.close()
+
+    def close(self):
         self._driver.close()

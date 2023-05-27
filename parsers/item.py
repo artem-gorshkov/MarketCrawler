@@ -24,6 +24,12 @@ def str_to_enum(item):
     return str_to_enum_dict[item]
 
 
+def get_quality_from_name(name: str) -> ItemQuality:
+    for quality_name, obj in str_to_enum_dict.items():
+        if name.find(quality_name) != -1:
+            return obj
+
+
 @dataclass
 class Item:
     item_key: bin
