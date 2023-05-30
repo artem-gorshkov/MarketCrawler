@@ -2,14 +2,14 @@ import json
 
 from bs4 import BeautifulSoup
 
-from parsers.anticloudflare import AntiCloudflare
-from parsers.dbconnector import Connector
+from src.parsers.anticloudflare import AntiCloudflare
+from src.parsers.dbconnector import Connector
 import re
-from parsers.item import str_to_enum, str_to_enum_dict, get_quality_from_name
+from src.parsers.item import str_to_enum_dict, get_quality_from_name
 
 
 class CsGoMarket:
-    credentials = json.load(open("../resources/credentials.json"))
+    credentials = json.load(open("../../resources/credentials.json"))
     URL = "https://market-old.csgo.com/?t=all&sd=desc&p="
 
     def __init__(self):

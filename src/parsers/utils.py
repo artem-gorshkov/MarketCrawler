@@ -4,7 +4,7 @@ from io import StringIO
 
 from dbconnector import Connector
 
-from parsers.item import Item
+from src.parsers.item import Item
 
 
 def form_item_key(item) -> str:

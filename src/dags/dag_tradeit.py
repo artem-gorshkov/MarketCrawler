@@ -2,8 +2,10 @@ import logging
 from datetime import datetime
 
 from airflow import DAG
-from parsers.tradeit import TradeIt
+
 from airflow.operators.python import PythonOperator
+
+from src.parsers.tradeit import TradeIt
 
 log = logging.getLogger(__name__)
 

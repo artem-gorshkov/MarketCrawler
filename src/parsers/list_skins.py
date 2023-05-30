@@ -7,14 +7,14 @@ from bs4 import BeautifulSoup
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from parsers.utils import form_item_key, write_to_buffer, update_etln
+from src.parsers.utils import form_item_key, write_to_buffer, update_etln
 
 
 class LisSkins:
     URL = "https://lis-skins.ru/market/csgo/?sort_by=popularity&page="
     MAX_PAGES = 10
 
-    credentials = json.load(open("../resources/credentials.json"))
+    credentials = json.load(open("../../resources/credentials.json"))
 
     def __init__(self):
         self._session = AntiCloudflare()
