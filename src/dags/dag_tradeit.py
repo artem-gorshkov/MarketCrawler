@@ -9,6 +9,7 @@ from datetime import datetime
 from airflow import DAG
 
 from airflow.operators.python import PythonOperator
+import json
 
 from src.db_module.db_connector import Connector
 from src.db_module.db_utils import create_transaction
@@ -17,7 +18,7 @@ from src.parsers.tradeit import TradeIt
 log = logging.getLogger(__name__)
 
 instance_tradeit = TradeIt()
-connector = Connector()
+connector = Connector(json.load(open('../../resources/credentials.json')))
 
 with DAG(
         dag_id="dag_tradeit",
