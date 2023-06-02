@@ -6,8 +6,12 @@ from src.db_module.db_connector import Connector
 from src.parsers.item import Item, ItemWithCup
 
 
-def create_transaction(connector: Connector, table_name: str, task_id: str, **kwargs):
+def create_transaction(**kwargs):
+    task_id = kwargs['task_id']
+    connector = kwargs['connector']
+    table_name = kwargs['table_name']
     data = kwargs['ti'].xcom_pull(task_ids=task_id)
+
     if task_id in ('extract_data_tradeit', 'extract_data_lis_skins'):
         data = [ItemWithCup(**item) for item in data]
         update_with_market_cup(data, connector, table_name)

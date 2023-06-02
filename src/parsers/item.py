@@ -21,7 +21,7 @@ str_to_enum_dict = {
 
 def str_to_enum(item):
     item = item.replace("(", "").replace(")", "")
-    return item
+    return item if item in str_to_enum_dict.keys() else None
 
 
 def get_quality_from_name(name: str) -> str:
