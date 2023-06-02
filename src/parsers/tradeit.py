@@ -1,8 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 
-from src.parsers.item import ItemWithCup
-from src.parsers.utils import form_item_key
+from src.parsers.utils import form_item_key, get_quality
 
 
 class TradeIt:
@@ -30,11 +29,13 @@ class TradeIt:
 
     def _parse_item(self, item: dict):
         parsed = {
-            "name": item["name"],
+            "name": item["name"].replace('StatTrak™', ''),
             "price": item["price"],
             "stattrack": item.get("hasStattrak"),
             "market_cup": item.get("currentStock"),
         }
+
+        parsed = get_quality(parsed)
         parsed |= {"item_key": form_item_key(parsed)}
         return parsed
 
@@ -61,4 +62,4 @@ class TradeIt:
 
 if __name__ == "__main__":
     instance = TradeIt()
-    instance.update_market_status()
+    print(instance.update_market_status())

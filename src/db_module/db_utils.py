@@ -8,10 +8,10 @@ from src.parsers.item import Item, ItemWithCup
 
 def create_transaction(connector: Connector, table_name: str, task_id: str, **kwargs):
     data = kwargs['ti'].xcom_pull(task_ids=task_id)
-    if task_id:
+    if task_id in ('extract_data_tradeit', 'extract_data_lis_skins'):
         data = [ItemWithCup(**item) for item in data]
         update_with_market_cup(data, connector, table_name)
-    elif isinstance(data[0], Item):
+    elif task_id in ('extract_data_cs_go_market'):
         data = [Item(**item) for item in data]
         update_other_db(data, connector, table_name)
     update_etln(data, connector)
@@ -69,12 +69,8 @@ def update_etln(batch: list[Item], connector: Connector) -> None:
 
     diff = curr_item_keys - etln_data
 
-    none_type_func = (
-        lambda item: item.quality.name if item.quality is not None else None
-    )
-
     new_items = [
-        (item.item_key, item.name, none_type_func(item), item.stattrack)
+        (item.item_key, item.name, item.quality, item.stattrack)
         for item in batch
         if item.item_key in diff
     ]

@@ -1,7 +1,7 @@
 import undetected_chromedriver as uc
+from pyvirtualdisplay import Display
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
 
 
 class AntiCloudflare:
@@ -12,6 +12,9 @@ class AntiCloudflare:
     """
 
     def __init__(self):
+        display = Display(visible=False, size=(800, 600))
+        display.start()
+
         self._options = Options()
         # self._options.headless = True
         caps = DesiredCapabilities().CHROME

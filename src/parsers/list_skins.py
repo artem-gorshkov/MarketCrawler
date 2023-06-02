@@ -8,7 +8,7 @@ from src.parsers.utils import form_item_key
 
 class LisSkins:
     URL = "https://lis-skins.ru/market/csgo/?sort_by=popularity&page="
-    MAX_PAGES = 5
+    MAX_PAGES = 10
 
     def __init__(self):
         self._session = AntiCloudflare()
@@ -54,7 +54,6 @@ class LisSkins:
             for futures in as_completed(futures):
                 result.extend(futures.result())
 
-        self._session.close()
         del self._session
 
         # Filter duplicates

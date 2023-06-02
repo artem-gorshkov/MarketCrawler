@@ -21,13 +21,13 @@ str_to_enum_dict = {
 
 def str_to_enum(item):
     item = item.replace("(", "").replace(")", "")
-    return str_to_enum_dict[item]
+    return item
 
 
 def get_quality_from_name(name: str) -> ItemQuality:
     for quality_name, obj in str_to_enum_dict.items():
         if name.find(quality_name) != -1:
-            return obj
+            return quality_name
 
 
 @dataclass
@@ -36,7 +36,7 @@ class Item:
     name: str
     price: float
     url: str = None
-    quality: ItemQuality = None
+    quality: str = None
     stattrack: bool = None
 
 
