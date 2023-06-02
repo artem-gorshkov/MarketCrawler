@@ -35,11 +35,11 @@ class Item:
     item_key: bin
     name: str
     price: float
-    url: str
+    url: str = None
     quality: ItemQuality = None
     stattrack: bool = None
 
 
 @dataclass
-class LisSkinsItem(Item):
+class ItemWithCup(Item):
     market_cup: int = None

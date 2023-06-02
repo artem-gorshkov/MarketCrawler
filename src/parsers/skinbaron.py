@@ -11,7 +11,8 @@ class Skinbaron:
     HEADER = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:20.0) Gecko/20100101 Firefox/20.0'}
 
     # Нашел перебором, с 1164 страницы сайт возвращает пустой массив
-    PAGE_NUMBER = 1163
+    PAGE_NUMBER = 100
+
     def __init__(self):
         self._session = requests.Session()
 

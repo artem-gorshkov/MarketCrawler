@@ -1,26 +1,19 @@
-from datetime import datetime
-
-from anticloudflare import AntiCloudflare
-from dbconnector import Connector
-from item import LisSkinsItem, str_to_enum
-from bs4 import BeautifulSoup
-import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from bs4 import BeautifulSoup
 
-from src.parsers.utils import form_item_key, write_to_buffer, update_etln
+from src.parsers.anticloudflare import AntiCloudflare
+from src.parsers.item import ItemWithCup, str_to_enum
+from src.parsers.utils import form_item_key
 
 
 class LisSkins:
     URL = "https://lis-skins.ru/market/csgo/?sort_by=popularity&page="
-    MAX_PAGES = 10
-
-    credentials = json.load(open("../../resources/credentials.json"))
+    MAX_PAGES = 20
 
     def __init__(self):
         self._session = AntiCloudflare()
-        self._connector = Connector(self.credentials)
 
-    def _get_page(self, page=0) -> list[LisSkinsItem]:
+    def _get_page(self, page=0) -> list[ItemWithCup]:
         html = self._session.get(self.URL + str(page))
 
         soup = BeautifulSoup(html, "html.parser")
@@ -29,15 +22,17 @@ class LisSkins:
 
         return parsed_items
 
-    def _get_all_items(self, html: BeautifulSoup) -> list[LisSkinsItem]:
+    def _get_all_items(self, html: BeautifulSoup) -> list[ItemWithCup]:
         items = html.find_all("div", {"class": "market_item"})
         parsed_items = [self._parse_item(item) for item in items]
         return parsed_items
 
-    def _parse_item(self, item: BeautifulSoup) -> LisSkinsItem:
+    def _parse_item(self, item: BeautifulSoup) -> ItemWithCup:
         parsed = {
             "name": item.find_all("div", {"class": "name-inner"})[0].text,
-            "price": item.find_all("div", {"class": "price"})[0].text.replace(" ", ""),
+            "price": item.find_all("div", {"class": "price"})[0]
+            .text.replace(" ", "")
+            .replace("$", ""),
             "url": item.find_all("a", href=True)[0]["href"],
         }
 
@@ -45,25 +40,12 @@ class LisSkins:
             parsed["quality"] = str_to_enum(quality[0].text)
 
         if market_cup := item.find_all("div", {"class": "similar-count"}):
-            parsed["market_cup"] = market_cup[0].text.replace("x", "")
+            parsed["market_cup"] = market_cup[0].text.replace("x", "").strip()
 
         parsed |= {"item_key": form_item_key(parsed)}
-        return LisSkinsItem(**parsed)
+        return ItemWithCup(**parsed)
 
-    def _form_db_transaction(self, batch: dict[LisSkinsItem]):
-        time = datetime.now()
-        batch = [
-            (time, item.item_key, item.price, item.url, item.market_cup)
-            for item in batch.values()
-        ]
-
-        header = ["status_timestamp", "item_key", "price", "url", "market_cup"]
-
-        s_buf = write_to_buffer(batch)
-
-        self._connector.write_data(s_buf, "lis_skins", header)
-
-    def update_market_status(self, n_workers=3):
+    def update_market_status(self, n_workers=3) -> list[ItemWithCup]:
         result = []
         with ThreadPoolExecutor(max_workers=n_workers) as executor:
             futures = []
@@ -72,14 +54,12 @@ class LisSkins:
             for futures in as_completed(futures):
                 result.extend(futures.result())
 
+        self._session.close()
         del self._session
 
         # Filter duplicates
-
-        result = {item.name: item for item in result}
-
-        self._form_db_transaction(result)
-        update_etln(self._connector, result)
+        result = [value for value in {item.name: item for item in result}.values()]
+        return result
 
 
 if __name__ == "__main__":
