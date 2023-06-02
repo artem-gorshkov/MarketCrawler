@@ -15,7 +15,7 @@ str_to_enum_dict = {
     "Minimal Wear": ItemQuality.MinimalWear,
     "Field-Tested": ItemQuality.FieldTested,
     "Well-Worn": ItemQuality.WellWorn,
-    "Battle-Scarred": ItemQuality.BattleScarred,
+    "Battle-Scarred": ItemQuality.BattleScarred
 }
 
 
@@ -24,7 +24,7 @@ def str_to_enum(item):
     return item
 
 
-def get_quality_from_name(name: str) -> ItemQuality:
+def get_quality_from_name(name: str) -> str:
     for quality_name, obj in str_to_enum_dict.items():
         if name.find(quality_name) != -1:
             return quality_name
@@ -37,7 +37,7 @@ class Item:
     price: float
     url: str = None
     quality: str = None
-    stattrack: bool = None
+    stattrack: bool = False
 
 
 @dataclass

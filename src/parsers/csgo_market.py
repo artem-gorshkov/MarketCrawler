@@ -8,7 +8,7 @@ from src.parsers.utils import form_item_key, get_quality
 
 class CsGoMarket:
     URL = "https://market-old.csgo.com/?t=all&sd=desc&p="
-    MAX_PAGES = 10
+    MAX_PAGES = 30
 
     def __init__(self):
         self._session = AntiCloudflare()
@@ -44,12 +44,8 @@ class CsGoMarket:
 
     def update_market_status(self, n_workers=3) -> list[dict]:
         result = []
-        with ThreadPoolExecutor(max_workers=n_workers) as executor:
-            futures = []
-            for page in range(1, self.MAX_PAGES):
-                futures.append(executor.submit(self._get_page, page=page))
-            for futures in as_completed(futures):
-                result.extend(futures.result())
+        for page in range(1, self.MAX_PAGES):
+            result.extend(self._get_page(page=page))
 
         del self._session
 

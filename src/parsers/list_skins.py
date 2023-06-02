@@ -1,4 +1,3 @@
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from bs4 import BeautifulSoup
 
 from src.parsers.anticloudflare import AntiCloudflare
@@ -8,7 +7,7 @@ from src.parsers.utils import form_item_key
 
 class LisSkins:
     URL = "https://lis-skins.ru/market/csgo/?sort_by=popularity&page="
-    MAX_PAGES = 10
+    MAX_PAGES = 50
 
     def __init__(self):
         self._session = AntiCloudflare()
@@ -45,14 +44,10 @@ class LisSkins:
         parsed |= {"item_key": form_item_key(parsed)}
         return parsed
 
-    def update_market_status(self, n_workers=3) -> list[ItemWithCup]:
+    def update_market_status(self) -> list[ItemWithCup]:
         result = []
-        with ThreadPoolExecutor(max_workers=n_workers) as executor:
-            futures = []
-            for page in range(1, self.MAX_PAGES):
-                futures.append(executor.submit(self._get_page, page=page))
-            for futures in as_completed(futures):
-                result.extend(futures.result())
+        for page in range(1, self.MAX_PAGES):
+            result.extend(self._get_page(page=page))
 
         del self._session
 

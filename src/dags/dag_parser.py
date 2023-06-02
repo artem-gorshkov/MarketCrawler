@@ -26,27 +26,24 @@ connector = Connector({
     "port": 5432
 })
 
-lis_skins_instance = LisSkins()
-tradeit_instance = TradeIt()
-csgo_market_instance = CsGoMarket()
 
 with DAG(
         dag_id="dag_parses",
         start_date=datetime(2023, 5, 30),
         catchup=False,
-        tags=["example"],
+        tags=["Data Extraction"],
         schedule_interval="*/30 * * * *",
 ) as dag:
     extract_data_tradeit = PythonOperator(
-        task_id="extract_data_tradeit", python_callable=tradeit_instance.update_market_status
+        task_id="extract_data_tradeit", python_callable=TradeIt().update_market_status
     )
 
     extract_data_cs_go_market = PythonOperator(
-        task_id="extract_data_cs_go_market", python_callable=csgo_market_instance.update_market_status
+        task_id="extract_data_cs_go_market", python_callable=CsGoMarket().update_market_status
     )
 
     extract_data_lis_skins = PythonOperator(
-        task_id="extract_data_lis_skins", python_callable=lis_skins_instance.update_market_status
+        task_id="extract_data_lis_skins", python_callable=LisSkins().update_market_status
     )
 
     write_to_db_tradeit = PythonOperator(
