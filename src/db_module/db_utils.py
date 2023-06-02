@@ -6,10 +6,13 @@ from src.db_module.db_connector import Connector
 from src.parsers.item import Item, ItemWithCup
 
 
-def create_transaction(data: list, connector: Connector, table_name: str):
-    if isinstance(data[0], ItemWithCup):
+def create_transaction(connector: Connector, table_name: str, task_id: str, **kwargs):
+    data = kwargs['ti'].xcom_pull(task_ids=task_id)
+    if task_id:
+        data = [ItemWithCup(**item) for item in data]
         update_with_market_cup(data, connector, table_name)
     elif isinstance(data[0], Item):
+        data = [Item(**item) for item in data]
         update_other_db(data, connector, table_name)
     update_etln(data, connector)
 

@@ -36,7 +36,7 @@ class TradeIt:
             "market_cup": item.get("currentStock"),
         }
         parsed |= {"item_key": form_item_key(parsed)}
-        return ItemWithCup(**parsed)
+        return parsed
 
 
     @staticmethod

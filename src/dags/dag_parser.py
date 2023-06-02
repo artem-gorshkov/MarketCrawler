@@ -9,19 +9,31 @@ from datetime import datetime
 from airflow import DAG
 
 from airflow.operators.python import PythonOperator
-import json
 
 from src.db_module.db_connector import Connector
 from src.db_module.db_utils import create_transaction
+
+from src.parsers.list_skins import LisSkins
 from src.parsers.tradeit import TradeIt
+from src.parsers.csgo_market import CsGoMarket
 
 log = logging.getLogger(__name__)
 
-instance_tradeit = TradeIt()
-connector = Connector(json.load(open('../../resources/credentials.json')))
+connector = Connector({
+  "user": "etl",
+  "password": "etl_pass",
+  "host": "192.168.0.29",
+  "database": "market",
+  "port": 5432
+})
+
+lis_skins_instance = LisSkins()
+tradeit_instance = TradeIt()
+csgo_market_instance = CsGoMarket()
+
 
 with DAG(
-        dag_id="dag_tradeit",
+        dag_id="dag_parses",
         start_date=datetime(2023, 5, 30),
         catchup=False,
         tags=["example"],
@@ -35,9 +47,9 @@ with DAG(
         task_id="write_data",
         python_callable=create_transaction,
         op_kwargs={
-            'data': ti.xcom_pull(task_ids='extract_data'),
             'connector': connector,
-            'table_name': 'tradeit'
+            'table_name': 'tradeit',
+            'task_id': 'extract_data'
         }
     )
     extract_data >> write_to_db

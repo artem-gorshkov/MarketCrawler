@@ -8,12 +8,12 @@ from src.parsers.utils import form_item_key
 
 class LisSkins:
     URL = "https://lis-skins.ru/market/csgo/?sort_by=popularity&page="
-    MAX_PAGES = 20
+    MAX_PAGES = 5
 
     def __init__(self):
         self._session = AntiCloudflare()
 
-    def _get_page(self, page=0) -> list[ItemWithCup]:
+    def _get_page(self, page=0) -> list[dict]:
         html = self._session.get(self.URL + str(page))
 
         soup = BeautifulSoup(html, "html.parser")
@@ -22,12 +22,12 @@ class LisSkins:
 
         return parsed_items
 
-    def _get_all_items(self, html: BeautifulSoup) -> list[ItemWithCup]:
+    def _get_all_items(self, html: BeautifulSoup) -> list[dict]:
         items = html.find_all("div", {"class": "market_item"})
         parsed_items = [self._parse_item(item) for item in items]
         return parsed_items
 
-    def _parse_item(self, item: BeautifulSoup) -> ItemWithCup:
+    def _parse_item(self, item: BeautifulSoup) -> dict:
         parsed = {
             "name": item.find_all("div", {"class": "name-inner"})[0].text,
             "price": item.find_all("div", {"class": "price"})[0]
@@ -43,7 +43,7 @@ class LisSkins:
             parsed["market_cup"] = market_cup[0].text.replace("x", "").strip()
 
         parsed |= {"item_key": form_item_key(parsed)}
-        return ItemWithCup(**parsed)
+        return parsed
 
     def update_market_status(self, n_workers=3) -> list[ItemWithCup]:
         result = []
@@ -58,10 +58,10 @@ class LisSkins:
         del self._session
 
         # Filter duplicates
-        result = [value for value in {item.name: item for item in result}.values()]
+        result = [value for value in {item['item_key']: item for item in result}.values()]
         return result
 
 
 if __name__ == "__main__":
     instance = LisSkins()
-    instance.update_market_status()
+    print(instance.update_market_status())

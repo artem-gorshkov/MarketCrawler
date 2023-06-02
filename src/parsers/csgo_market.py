@@ -38,7 +38,7 @@ class CsGoMarket:
         parsed_item = self.get_stattrack(parsed_item)
         parsed_item = self.get_quality(parsed_item)
         parsed_item |= {"item_key": form_item_key(parsed_item)}
-        return Item(**parsed_item)
+        return parsed_item
 
     @staticmethod
     def get_stattrack(item: dict) -> dict:
