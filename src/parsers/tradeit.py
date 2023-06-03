@@ -28,9 +28,10 @@ class TradeIt:
         return parsed_items
 
     def _parse_item(self, item: dict):
+        price = str(item["price"])
         parsed = {
             "name": item["name"].replace('StatTrak™', ''),
-            "price": item["price"],
+            "price": float(f'{price[:-2]}.{price[-2:]}'),
             "stattrack": item.get("hasStattrak"),
             "market_cup": item.get("currentStock"),
         }

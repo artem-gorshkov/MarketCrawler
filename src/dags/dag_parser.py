@@ -27,18 +27,20 @@ with DAG(
         tags=["Data Extraction"],
         schedule_interval="*/30 * * * *",
 ) as dag:
-
     def extract_data_tradeit():
         from src.parsers.tradeit import TradeIt
         return TradeIt().update_market_status()
+
 
     def extract_data_cs_go_market():
         from src.parsers.csgo_market import CsGoMarket
         return CsGoMarket().update_market_status()
 
+
     def extract_data_lis_skins():
         from src.parsers.list_skins import LisSkins
         return LisSkins().update_market_status()
+
 
     def create_transaction(**kwargs):
         from src.db_module.db_connector import Connector
@@ -89,4 +91,5 @@ with DAG(
     )
 
     extract_data_tradeit >> write_to_db_tradeit
-    extract_data_lis_skins >> write_to_db_lis_skins >> extract_data_cs_go_market >> write_to_db_csgo_market
+    extract_data_lis_skins >> write_to_db_lis_skins
+    extract_data_cs_go_market >> write_to_db_csgo_market
