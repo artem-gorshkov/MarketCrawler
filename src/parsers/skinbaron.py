@@ -51,9 +51,9 @@ class Skinbaron:
     def update_market_status(self):
         result = []
         for page in range(1, self.PAGE_NUMBER + 1, 1):
-            self._get_page(page)
+            result.extend(self._get_page(page))
             time.sleep(0.2)
-        print(result)
+        return result
 
 
 if __name__ == '__main__':

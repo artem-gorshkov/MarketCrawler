@@ -24,7 +24,7 @@ class AntiCloudflare:
         self._options.add_argument("--lang=en")
 
         if anti:
-            self._driver = uc.Chrome(driver_executable_path='/usr/bin/chromedriver', options=self._options)
+            self._driver = uc.Chrome(options=self._options)
         else:
             self._driver = webdriver.Chrome(
                 '/usr/bin/chromedriver',

@@ -9,7 +9,7 @@ class CsGoMarket:
     MAX_PAGES = 5
 
     def __init__(self):
-        self._session = AntiCloudflare(True)
+        self._session = AntiCloudflare(anti=True)
 
     def _get_page(self, page: int):
         html = self._session.get(self.URL + str(page))
@@ -40,7 +40,7 @@ class CsGoMarket:
         item["name"].replace("StatTrak™", "").strip()
         return item
 
-    def update_market_status(self, n_workers=3) -> list[dict]:
+    def update_market_status(self) -> list[dict]:
         result = []
         for page in range(1, self.MAX_PAGES):
             result.extend(self._get_page(page=page))
