@@ -1,3 +1,5 @@
+import undetected_chromedriver as uc
+
 from selenium import webdriver
 from pyvirtualdisplay import Display
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
@@ -11,7 +13,7 @@ class AntiCloudflare:
     Основан на запуске headless браузера и получения html
     """
 
-    def __init__(self):
+    def __init__(self, anti=False):
         display = Display(visible=False, size=(800, 600))
         display.start()
 
@@ -21,11 +23,14 @@ class AntiCloudflare:
         caps["pageLoadStrategy"] = "eager"
         self._options.add_argument("--lang=en")
 
-        self._driver = webdriver.Chrome(
-            '/usr/bin/chromedriver',
-            options=self._options,
-            desired_capabilities=caps
-        )
+        if anti:
+            self._driver = uc.Chrome(driver_executable_path='/usr/bin/chromedriver', options=self._options)
+        else:
+            self._driver = webdriver.Chrome(
+                '/usr/bin/chromedriver',
+                options=self._options,
+                desired_capabilities=caps
+            )
 
     def get(self, url: str) -> str:
         """

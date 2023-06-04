@@ -1,5 +1,3 @@
-from concurrent.futures import ThreadPoolExecutor, as_completed
-
 from bs4 import BeautifulSoup
 
 from src.parsers.anticloudflare import AntiCloudflare
@@ -8,10 +6,10 @@ from src.parsers.utils import form_item_key, get_quality
 
 class CsGoMarket:
     URL = "https://market-old.csgo.com/?t=all&sd=desc&p="
-    MAX_PAGES = 30
+    MAX_PAGES = 5
 
     def __init__(self):
-        self._session = AntiCloudflare()
+        self._session = AntiCloudflare(True)
 
     def _get_page(self, page: int):
         html = self._session.get(self.URL + str(page))
