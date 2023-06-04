@@ -1,4 +1,4 @@
-import undetected_chromedriver as uc
+from selenium import webdriver
 from pyvirtualdisplay import Display
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.chrome.options import Options
@@ -21,9 +21,10 @@ class AntiCloudflare:
         caps["pageLoadStrategy"] = "eager"
         self._options.add_argument("--lang=en")
 
-        self._driver = uc.Chrome(
+        self._driver = webdriver.Chrome(
+            '/usr/bin/chromedriver',
             options=self._options,
-            desired_capabilities=caps,
+            desired_capabilities=caps
         )
 
     def get(self, url: str) -> str:
