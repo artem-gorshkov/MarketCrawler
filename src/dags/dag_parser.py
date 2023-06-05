@@ -99,7 +99,6 @@ with DAG(
         task_id="write_data_skin_baron",
         python_callable=create_transaction,
         op_kwargs={
-            'table_name': 'skin_baron',
             'task_id': 'extract_data_skin_baron'
         }
     )
@@ -107,4 +106,4 @@ with DAG(
     extract_data_tradeit >> write_to_db_tradeit
     extract_data_lis_skins >> write_to_db_lis_skins
     extract_data_cs_go_market >> write_to_db_csgo_market
-    #extract_data_skin_baron >> write_to_db_skin_baron
+    extract_data_skin_baron >> write_to_db_skin_baron
