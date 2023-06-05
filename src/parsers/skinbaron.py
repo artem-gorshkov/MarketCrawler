@@ -23,7 +23,7 @@ class Skinbaron:
         while response.status_code == 429:
             print("Слишком много запросов")
             response = self._session.get(self.URL + param, headers=self.HEADER)
-            time.sleep(random() * 30)
+            time.sleep(random() * 10)
         print(f'Nice response {page}')
         time.sleep(random() + .5)
         items = response.json()['aggregatedMetaOffers']
