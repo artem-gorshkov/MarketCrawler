@@ -6,7 +6,7 @@ from src.parsers.utils import form_item_key, get_quality
 
 class CsGoMarket:
     URL = "https://market-old.csgo.com/?t=all&sd=desc&p="
-    MAX_PAGES = 30
+    MAX_PAGES = 3
 
     def __init__(self):
         self._session = get_desired_driver('special')
@@ -40,7 +40,7 @@ class CsGoMarket:
         item["name"].replace("StatTrak™", "").strip()
         return item
 
-    def update_market_status(self, n_workers=3) -> list[dict]:
+    def update_market_status(self) -> list[dict]:
         result = []
         for page in range(1, self.MAX_PAGES):
             result.extend(self._get_page(page=page))

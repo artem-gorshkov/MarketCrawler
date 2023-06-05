@@ -1,6 +1,7 @@
 
 import requests
 import time
+from random import random
 
 from src.parsers.item import get_quality_from_name
 
@@ -19,10 +20,12 @@ class Skinbaron:
     def _get_page(self, page: int):
         param = f'page={page}'
         response = self._session.get(self.URL + param, headers=self.HEADER)
-        if response.status_code == 429:
+        while response.status_code == 429:
             print("Слишком много запросов")
-            return
-        print('Nice response')
+            response = self._session.get(self.URL + param, headers=self.HEADER)
+            time.sleep(random() * 10 + 10)
+        print(f'Nice response {page}')
+        time.sleep(random() + .5)
         items = response.json()['aggregatedMetaOffers']
 
         parsed_items = list(map(self._parse_item, items))
@@ -52,7 +55,6 @@ class Skinbaron:
         result = []
         for page in range(1, self.PAGE_NUMBER + 1, 1):
             result.extend(self._get_page(page))
-            time.sleep(0.2)
         return result
 
 

@@ -1,12 +1,7 @@
-import time
-
 from pyvirtualdisplay import Display
-from selenium.webdriver.common.by import By
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
 
 class DefaultSelenium:
@@ -17,6 +12,9 @@ class DefaultSelenium:
     """
 
     def __init__(self):
+        display = Display(visible=False, size=(800, 800))
+        display.start()
+
         self._options = Options()
         # self._options.headless = True
         self._caps = DesiredCapabilities().CHROME
@@ -24,6 +22,7 @@ class DefaultSelenium:
         self._options.add_argument("--lang=en")
 
         self._driver = webdriver.Chrome(
+            '/usr/bin/chromedriver',
             options=self._options,
             desired_capabilities=self._caps
         )

@@ -1,5 +1,6 @@
 import time
 
+from pyvirtualdisplay import Display
 import undetected_chromedriver as uc
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.chrome.options import Options
@@ -13,6 +14,9 @@ class AntiCloudflare:
     """
 
     def __init__(self):
+        display = Display(visible=False, size=(800, 800))
+        display.start()
+
         self._options = Options()
         # self._options.headless = True
         self._caps = DesiredCapabilities().CHROME
@@ -34,7 +38,6 @@ class AntiCloudflare:
         time.sleep(6)
 
         html = self._driver.page_source
-
         return html
 
     def __del__(self):
