@@ -3,6 +3,7 @@ import time
 from random import random
 
 from src.parsers.item import get_quality_from_name
+from src.parsers.utils import form_item_key
 
 
 class Skinbaron:
@@ -44,7 +45,7 @@ class Skinbaron:
             else:
                 price = item.get('formattedLowestPriceTradeLockedOtherCurrency').replace('$', '')
             stattrack = "StatTrak™" in item['extendedProductInformation']['localizedName']
-        return {
+        parsed_item = {
             'name': item['extendedProductInformation']['localizedName'].replace("StatTrak™", "").strip(),
             'url': 'https://skinbaron.de' + item['offerLink'],
             'price': price,
@@ -52,6 +53,9 @@ class Skinbaron:
             'stattrack': stattrack,
             'market_cup': item.get('numberOfOffers', 0)
         }
+
+        parsed_item |= {'item_key': form_item_key(parsed_item)}
+        return parsed_item
 
     def update_market_status(self):
         result = []
