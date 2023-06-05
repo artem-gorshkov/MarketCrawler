@@ -7,8 +7,6 @@ import logging
 from datetime import datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from airflow.operators.bash import BashOperator
-from airflow.utils.trigger_rule import TriggerRule
 
 creds = {
     "user": "etl",
@@ -41,6 +39,9 @@ with DAG(
         from src.parsers.list_skins import LisSkins
         return LisSkins().update_market_status()
 
+    def extract_data_skin_baron():
+        from src.parsers.skinbaron import Skinbaron
+        return Skinbaron().update_market_status()
 
     def create_transaction(**kwargs):
         from src.db_module.db_connector import Connector
@@ -61,6 +62,10 @@ with DAG(
 
     extract_data_lis_skins = PythonOperator(
         task_id="extract_data_lis_skins", python_callable=extract_data_lis_skins
+    )
+
+    extract_data_skin_baron = PythonOperator(
+        task_id='extract_data_skin_baron', python_callable=extract_data_skin_baron
     )
 
     write_to_db_tradeit = PythonOperator(
@@ -90,6 +95,16 @@ with DAG(
         }
     )
 
+    write_to_db_skin_baron = PythonOperator(
+        task_id="write_data_skin_baron",
+        python_callable=create_transaction,
+        op_kwargs={
+            'table_name': 'skin_baron',
+            'task_id': 'extract_data_skin_baron'
+        }
+    )
+
     extract_data_tradeit >> write_to_db_tradeit
     extract_data_lis_skins >> write_to_db_lis_skins
     extract_data_cs_go_market >> write_to_db_csgo_market
+    extract_data_skin_baron >> write_to_db_skin_baron

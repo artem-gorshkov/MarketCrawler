@@ -11,7 +11,7 @@ class Skinbaron:
     HEADER = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:20.0) Gecko/20100101 Firefox/20.0'}
 
     # Нашел перебором, с 1164 страницы сайт возвращает пустой массив
-    PAGE_NUMBER = 100
+    PAGE_NUMBER = 50
 
     def __init__(self):
         self._session = requests.Session()
@@ -19,9 +19,10 @@ class Skinbaron:
     def _get_page(self, page: int):
         param = f'page={page}'
         response = self._session.get(self.URL + param, headers=self.HEADER)
-        if (response.status_code == 429):
+        if response.status_code == 429:
             print("Слишком много запросов")
             return
+        print('Nice response')
         items = response.json()['aggregatedMetaOffers']
 
         parsed_items = list(map(self._parse_item, items))
@@ -44,15 +45,15 @@ class Skinbaron:
             'price': price,
             'quality': quality,
             'stattrack': stattrack,
-            'market_cup': item.get('numberOfOffers')
+            'market_cup': item.get('numberOfOffers', 0)
         }
 
     def update_market_status(self):
         result = []
         for page in range(1, self.PAGE_NUMBER + 1, 1):
-            self._get_page(page)
+            result.extend(self._get_page(page))
             time.sleep(0.2)
-        print(result)
+        return result
 
 
 if __name__ == '__main__':

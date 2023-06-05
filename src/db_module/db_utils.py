@@ -12,7 +12,7 @@ def create_transaction(**kwargs):
     table_name = kwargs['table_name']
     data = kwargs['ti'].xcom_pull(task_ids=task_id)
 
-    if task_id in ('extract_data_tradeit', 'extract_data_lis_skins'):
+    if task_id in ('extract_data_tradeit', 'extract_data_lis_skins', 'extract_data_skin_baron'):
         data = [ItemWithCup(**item) for item in data]
         update_with_market_cup(data, connector, table_name)
     elif task_id in ('extract_data_cs_go_market'):
