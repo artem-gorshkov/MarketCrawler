@@ -99,6 +99,7 @@ with DAG(
         task_id="write_data_skin_baron",
         python_callable=create_transaction,
         op_kwargs={
+            'table_name': 'skinbaron',
             'task_id': 'extract_data_skin_baron'
         }
     )
