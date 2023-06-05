@@ -1,4 +1,3 @@
-
 import requests
 import time
 from random import random
@@ -23,7 +22,7 @@ class Skinbaron:
         while response.status_code == 429:
             print("Слишком много запросов")
             response = self._session.get(self.URL + param, headers=self.HEADER)
-            time.sleep(random() * 10 + 10)
+            time.sleep(random() * 30)
         print(f'Nice response {page}')
         time.sleep(random() + .5)
         items = response.json()['aggregatedMetaOffers']
@@ -40,7 +39,10 @@ class Skinbaron:
                 quality = get_quality_from_name(item['singleOffer'].get('localizedExteriorName'))
             stattrack = 'statTrakString' in item['singleOffer']
         else:
-            price = item['formattedLowestPriceOtherCurrency'][1:]
+            if item.get('formattedLowestPriceOtherCurrency'):
+                price = item['formattedLowestPriceOtherCurrency'][1:]
+            else:
+                price = item.get('formattedLowestPriceTradeLockedOtherCurrency').replace('$', '')
             stattrack = "StatTrak™" in item['extendedProductInformation']['localizedName']
         return {
             'name': item['extendedProductInformation']['localizedName'].replace("StatTrak™", "").strip(),
@@ -60,4 +62,4 @@ class Skinbaron:
 
 if __name__ == '__main__':
     instance = Skinbaron()
-    instance.update_market_status()
+    print(instance.update_market_status())
