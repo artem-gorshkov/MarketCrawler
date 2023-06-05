@@ -1,8 +1,6 @@
-from concurrent.futures import ThreadPoolExecutor, as_completed
-
 from bs4 import BeautifulSoup
 
-from src.parsers.anticloudflare import AntiCloudflare
+from src.parsers.selenium_utils.selenium_utils import get_desired_driver
 from src.parsers.utils import form_item_key, get_quality
 
 
@@ -11,7 +9,7 @@ class CsGoMarket:
     MAX_PAGES = 30
 
     def __init__(self):
-        self._session = AntiCloudflare()
+        self._session = get_desired_driver('special')
 
     def _get_page(self, page: int):
         html = self._session.get(self.URL + str(page))

@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 
-from src.parsers.anticloudflare import AntiCloudflare
+from src.parsers.selenium_utils.selenium_utils import get_desired_driver
 from src.parsers.item import ItemWithCup, str_to_enum
 from src.parsers.utils import form_item_key
 
@@ -10,7 +10,7 @@ class LisSkins:
     MAX_PAGES = 50
 
     def __init__(self):
-        self._session = AntiCloudflare()
+        self._session = get_desired_driver('default')
 
     def _get_page(self, page=0) -> list[dict]:
         html = self._session.get(self.URL + str(page))
