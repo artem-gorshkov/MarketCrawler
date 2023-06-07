@@ -2,6 +2,8 @@ import time
 
 from pyvirtualdisplay import Display
 import undetected_chromedriver as uc
+from selenium.webdriver import ActionChains
+from selenium.webdriver.common.by import By
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.chrome.options import Options
 
@@ -17,13 +19,16 @@ class AntiCloudflare:
         display = Display(visible=False, size=(800, 800))
         display.start()
 
+        self._lang_changed = False
+
         self._options = Options()
         # self._options.headless = True
         self._caps = DesiredCapabilities().CHROME
         self._caps["pageLoadStrategy"] = "eager"
-        self._options.add_argument("--lang=en")
+        self._options.add_argument("--lang=ru")
 
         self._driver = uc.Chrome(
+            driver_executable_path='../../resources/chromedriver',
             options=self._options,
             desired_capabilities=self._caps
         )
@@ -37,8 +42,24 @@ class AntiCloudflare:
         self._driver.get(url)
         time.sleep(6)
 
+        if not self._lang_changed:
+            self._change_lang()
+            self._driver.get(url)
+
         html = self._driver.page_source
+
         return html
+
+    def _change_lang(self):
+        try:
+            lang = self._driver.find_element(By.CLASS_NAME, 'lang-selector__item_ru')
+            ac = ActionChains(self._driver)
+            ac.move_to_element(lang).click().perform()
+            lang = self._driver.find_element(By.CLASS_NAME, 'lang-selector__item_en')
+            ac.move_to_element(lang).click().perform()
+        except Exception:
+            pass
+        self._lang_changed = True
 
     def __del__(self):
         self._driver.close()

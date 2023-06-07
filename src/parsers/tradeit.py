@@ -43,7 +43,7 @@ class TradeIt:
 
     @staticmethod
     def _create_intervals(n: int) -> tuple[list, int]:
-        MAX_ITEMS = 4000
+        MAX_ITEMS = 10_000
         step = MAX_ITEMS // n
 
         return [i + step * i for i in range(n)], step

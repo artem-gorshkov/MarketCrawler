@@ -7,7 +7,7 @@ from src.parsers.utils import form_item_key
 
 
 class Skinbaron:
-    URL = 'https://skinbaron.de/api/v2/Browsing/FilterOffers?appId=730&sort=BP&language=en&otherCurrency=USD&'
+    URL = 'https://skinbaron.de/api/v2/Browsing/FilterOffers?appId=730&sort=BP&language=en&otherCurrency=RUB&'
 
     HEADER = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:20.0) Gecko/20100101 Firefox/20.0'}
 
@@ -22,8 +22,8 @@ class Skinbaron:
         response = self._session.get(self.URL + param, headers=self.HEADER)
         while response.status_code == 429:
             print("Слишком много запросов")
-            response = self._session.get(self.URL + param, headers=self.HEADER)
             time.sleep(random() * 10)
+            response = self._session.get(self.URL + param, headers=self.HEADER)
         print(f'Nice response {page}')
         time.sleep(random() + .5)
         items = response.json()['aggregatedMetaOffers']
@@ -43,12 +43,12 @@ class Skinbaron:
             if item.get('formattedLowestPriceOtherCurrency'):
                 price = item['formattedLowestPriceOtherCurrency'][1:]
             else:
-                price = item.get('formattedLowestPriceTradeLockedOtherCurrency').replace('$', '')
+                price = item.get('formattedLowestPriceTradeLockedOtherCurrency')
             stattrack = "StatTrak™" in item['extendedProductInformation']['localizedName']
         parsed_item = {
             'name': item['extendedProductInformation']['localizedName'].replace("StatTrak™", "").strip(),
             'url': 'https://skinbaron.de' + item['offerLink'],
-            'price': price,
+            'price': price.replace('₽', '').strip(),
             'quality': quality,
             'stattrack': stattrack,
             'market_cup': item.get('numberOfOffers', 0)

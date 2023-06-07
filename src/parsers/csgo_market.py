@@ -6,7 +6,7 @@ from src.parsers.utils import form_item_key, get_quality
 
 class CsGoMarket:
     URL = "https://market-old.csgo.com/?t=all&sd=desc&p="
-    MAX_PAGES = 3
+    MAX_PAGES = 30
 
     def __init__(self):
         self._session = get_desired_driver('special')
@@ -27,7 +27,7 @@ class CsGoMarket:
         parsed_item = {
             "name": item.find_all("div", {"class": "name"})[0].text.strip(),
             "price": item.find_all("div", {"class": "price"})[0].text.strip().replace(' ', ''),
-            "url": item["href"],
+            "url": 'https://market-old.csgo.com' + item["href"],
         }
         parsed_item = self.get_stattrack(parsed_item)
         parsed_item = get_quality(parsed_item)
@@ -37,7 +37,7 @@ class CsGoMarket:
     @staticmethod
     def get_stattrack(item: dict) -> dict:
         item["stattrack"] = item["name"].find("StatTrak™") != -1
-        item["name"].replace("StatTrak™", "").strip()
+        item['name'] = item["name"].replace("StatTrak™", "").strip()
         return item
 
     def update_market_status(self) -> list[dict]:
