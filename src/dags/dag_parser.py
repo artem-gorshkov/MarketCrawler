@@ -23,7 +23,7 @@ with DAG(
         start_date=datetime(2023, 5, 30),
         catchup=False,
         tags=["Data Extraction"],
-        schedule_interval="*/30 * * * *",
+        schedule_interval="*/20 * * * *",
 ) as dag:
     def extract_data_tradeit():
         from src.parsers.tradeit import TradeIt

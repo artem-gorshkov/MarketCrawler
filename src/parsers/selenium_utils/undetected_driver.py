@@ -28,7 +28,7 @@ class AntiCloudflare:
         self._options.add_argument("--lang=ru")
 
         self._driver = uc.Chrome(
-            driver_executable_path='../../resources/chromedriver',
+            driver_executable_path='/home/ubuntu/airflow/MarketCrawler/resources/chromedriver',
             options=self._options,
             desired_capabilities=self._caps
         )
