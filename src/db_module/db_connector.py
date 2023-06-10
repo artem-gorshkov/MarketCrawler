@@ -35,3 +35,13 @@ class Connector:
             self._connection.commit()
 
         return set([item[0].replace("-", "") for item in data])
+
+    def execute_query(self, query: str):
+        with self._connection.cursor() as cur:
+            try:
+                cur.execute(query)
+                self._connection.commit()
+            except Exception as err:
+                print(err)
+            return None
+

@@ -11,12 +11,19 @@ class TradeIt:
         "=false&"
     )
 
+    exchange_rate_url = 'https://tradeit.gg/api/v2/exchange-rate'
+
     HEADER = {
         "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:20.0) Gecko/20100101 Firefox/20.0"
     }
 
     def __init__(self):
         self._session = requests.Session()
+        self._get_exchange_rate()
+
+    def _get_exchange_rate(self):
+        response = self._session.get(self.exchange_rate_url, headers=self.HEADER)
+        self._exchange_rate = response.json().get('rates').get('RUB')
 
     def _get_page(self, left: int, step: int):
         param = f"offset={left}&limit={step}"
@@ -31,7 +38,7 @@ class TradeIt:
         price = str(item["price"])
         parsed = {
             "name": item["name"].replace('StatTrak™', ''),
-            "price": float(f'{price[:-2]}.{price[-2:]}'),
+            "price": round(float(f'{price[:-2]}.{price[-2:]}') * self._exchange_rate, 2),
             "stattrack": item.get("hasStattrak"),
             "market_cup": item.get("currentStock"),
         }

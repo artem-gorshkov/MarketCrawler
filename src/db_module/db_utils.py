@@ -82,3 +82,38 @@ def update_etln(batch: list[Item], connector: Connector) -> None:
     s_buf = write_to_buffer(new_items)
 
     connector.write_data(s_buf, "item_etln", header)
+
+
+def find_pair(**kwargs):
+    connector = kwargs['connector']
+    table_name_1 = kwargs['table_name_1']
+    table_name_2 = kwargs['table_name_2']
+
+    SQL = f"""
+    insert into market.pairs(
+        price_timestamp,
+        item_key,
+        market_1,
+        price_1,
+        market_2,
+        price_2,
+        delta_price,
+        url_1,
+        url_2
+    )
+    select	
+        l.price_timestamp,
+        l.item_key,
+        '{table_name_1}',
+        l.price,
+        '{table_name_2}',
+        s.price,
+        abs(l.price - s.price) as delta_price,
+        l.url,
+        s.url
+    from last_period('{table_name_1}') l 
+        inner join last_period('{table_name_2}') s 
+            on s.item_key = l.item_key
+    """
+
+    connector.execute_query(SQL)

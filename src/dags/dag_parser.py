@@ -7,6 +7,7 @@ import logging
 from datetime import datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+from itertools import combinations
 
 creds = {
     "user": "etl",
@@ -39,9 +40,11 @@ with DAG(
         from src.parsers.list_skins import LisSkins
         return LisSkins().update_market_status()
 
+
     def extract_data_skin_baron():
         from src.parsers.skinbaron import Skinbaron
         return Skinbaron().update_market_status()
+
 
     def create_transaction(**kwargs):
         from src.db_module.db_connector import Connector
@@ -50,6 +53,15 @@ with DAG(
         connector = Connector(creds)
         kwargs |= {'connector': connector}
         return create_transaction(**kwargs)
+
+
+    def find_pairs(**kwargs):
+        from src.db_module.db_connector import Connector
+        from src.db_module.db_utils import find_pair
+
+        connector = Connector(creds)
+        kwargs |= {'connector': connector}
+        find_pair(**kwargs)
 
 
     extract_data_tradeit = PythonOperator(
@@ -104,7 +116,31 @@ with DAG(
         }
     )
 
+    last_point = {
+        'tradeit': write_to_db_tradeit,
+        'lisskins': write_to_db_lis_skins,
+        'csgomarket': write_to_db_csgo_market,
+        'skinbaron': write_to_db_skin_baron
+    }
+
+    python_operators = []
+
+    for table_name_1, table_name_2 in combinations(sorted(last_point.keys()), 2):
+        python_operators.append(
+            PythonOperator(
+                task_id=f"find_pair_{table_name_1}_{table_name_2}",
+                python_callable=find_pairs,
+                op_kwargs={
+                    'table_name_1': f'market.{table_name_1}',
+                    'table_name_2': f'market.{table_name_2}'
+                }
+            )
+        )
+
     extract_data_tradeit >> write_to_db_tradeit
     extract_data_lis_skins >> write_to_db_lis_skins
     extract_data_cs_go_market >> write_to_db_csgo_market
     extract_data_skin_baron >> write_to_db_skin_baron
+
+    for idx, nodes in enumerate(combinations(sorted(last_point.keys()), 2)):
+        (last_point[nodes[0]], last_point[nodes[1]]) >> python_operators[idx]
