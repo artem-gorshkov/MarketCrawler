@@ -35,13 +35,13 @@ class Skinbaron:
     def _parse_item(self, item: dict):
         quality = None
         if 'singleOffer' in item:
-            price = item['singleOffer']['formattedItemPriceOtherCurrency'][1:]
+            price = item['singleOffer']['formattedItemPriceOtherCurrency']
             if 'localizedExteriorName' in item['singleOffer']:
                 quality = get_quality_from_name(item['singleOffer'].get('localizedExteriorName'))
             stattrack = 'statTrakString' in item['singleOffer']
         else:
             if item.get('formattedLowestPriceOtherCurrency'):
-                price = item['formattedLowestPriceOtherCurrency'][1:]
+                price = item['formattedLowestPriceOtherCurrency']
             else:
                 price = item.get('formattedLowestPriceTradeLockedOtherCurrency')
             stattrack = "StatTrak™" in item['extendedProductInformation']['localizedName']
