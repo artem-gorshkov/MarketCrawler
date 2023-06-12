@@ -61,7 +61,7 @@ with DAG(
 
         connector = Connector(creds)
         kwargs |= {'connector': connector}
-        find_pair(**kwargs)
+        return find_pair(**kwargs)
 
 
     extract_data_tradeit = PythonOperator(

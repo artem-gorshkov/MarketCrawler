@@ -45,3 +45,13 @@ class Connector:
                 print(err)
             return None
 
+    def truncate_table(self, tables: list[str]):
+        with self._connection.cursor() as cur:
+            for table in tables:
+                try:
+                    cur.execute(f'truncate table market.{table}')
+                    self._connection.commit()
+                except Exception as err:
+                    print(err)
+            return None
+
