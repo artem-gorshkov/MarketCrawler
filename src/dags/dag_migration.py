@@ -7,6 +7,7 @@ import logging
 from datetime import datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+from airflow.operators.dummy_operator import DummyOperator
 
 log = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ creds = {
 }
 
 with DAG(
-        dag_id="dag_migration",
+        dag_id="history_dag_migration",
         start_date=datetime(2023, 5, 30),
         catchup=False,
         tags=["Dag migration"],
@@ -54,10 +55,12 @@ with DAG(
         task_id="migrate_etln", python_callable=migrate_etln_func
     )
 
+    dummy_operator = DummyOperator(task_id='waiter')
+
     '''
     clear_data = PythonOperator(
         task_id="clear_data", python_callable=clear_daily_data
     )
     '''
 
-    migrate_data, migrate_etln
+    [migrate_data, migrate_etln] >> dummy_operator

@@ -1,10 +1,12 @@
-import os
-
-from pyspark.sql import SparkSession
-import pandas as pd
 from datetime import datetime, timedelta
 
+from pyspark.pandas import DataFrame
+from pyspark.sql import SparkSession, Window
+
+import pyspark.sql.functions as F
+
 TABLE_NAMES = ['csgomarket', 'lisskins', 'pairs', 'skinbaron', 'tradeit']
+MIGRATION_TABLE_NAMES = ['csgomarket', 'lisskins', 'skinbaron', 'tradeit']
 
 
 class SparkCustomeSession:
@@ -44,6 +46,17 @@ class SparkCustomeSession:
         df.printSchema()
         return df
 
+    def jdbc_write(self, data: DataFrame):
+        data.write \
+            .format('jdbc') \
+            .option('url', 'jdbc:postgresql://192.168.0.29:5432/market') \
+            .option("driver", "org.postgresql.Driver")\
+            .option('dbtable', 'market_agg.market_history') \
+            .option("user", "postgres") \
+            .option("password", "changeme") \
+            .mode('append') \
+            .save()
+
     def s3_write(self, df, path):
         df.write.mode('overwrite').parquet('s3a://market/' + path)
 
@@ -51,7 +64,7 @@ class SparkCustomeSession:
         return self._spark.read.parquet('s3a://market/' + path)
 
     def create_path(self, table):
-        return datetime.today().strftime('%Y/%m/%d/') + table
+        return (datetime.today() - timedelta(days=1)).strftime('%Y/%m/%d/') + table
 
     def create_migrartion_query(self, date, table):
         return f'''
@@ -86,8 +99,83 @@ class SparkCustomeSession:
         df = self.jdbc_read('(select * from market.item_etln) as df')
         self.s3_write(df, 'item_etln')
 
+    def agg_migration(self):
+        etln = self.s3_read('item_etln')
+
+        for table in MIGRATION_TABLE_NAMES:
+            path = self.create_path(table)
+
+            df = self.s3_read(path)
+            # pairs = self.s3_read('2023/06/12/pairs')
+
+            volatility = self.item_volatility(df)
+            purchased_by_day = self.purchased_by_day(df)
+            avg_price = self.avg_price(df)
+            now = datetime.now() - timedelta(days=1)
+
+            # count_in_pairs = self.count_in_pairs(df, pairs, table)
+            # .join(count_in_pairs, count_in_pairs.item_key == etln.item_key, 'inner')
+
+            result = etln.join(volatility, volatility.item_key == etln.item_key, 'inner') \
+                .join(purchased_by_day, purchased_by_day.item_key == etln.item_key, 'inner') \
+                .join(avg_price, avg_price.item_key == etln.item_key, 'inner') \
+                .select('name', 'quality', F.coalesce('stattrack', F.lit(False)).alias('stattrack'),
+                        F.round('volatility', 3).alias('volatility'), 'purchased_by_day', 'avg_price') \
+                .withColumn('period', F.lit(now.date())) \
+                .withColumn('market_name', F.lit(table))
+
+            self.jdbc_write(result)
+
+    def avg_price(self, df: DataFrame):
+        return df.groupby('item_key').agg(F.round(F.avg('price'), 3).alias('avg_price')).select('item_key', 'avg_price')
+
+    def item_volatility(self, df: DataFrame):
+        window = Window.partitionBy("item_key").orderBy(F.col('price_timestamp').asc())
+
+        volatility = df.withColumn('log_price', F.log('price')) \
+            .withColumn('diff', F.col('log_price') - F.lag(F.col('log_price'), 1, 0).over(window)) \
+            .groupBy('item_key') \
+            .agg(F.stddev(F.col('log_price')).alias('volatility'))
+
+        return volatility
+
+    def count_in_pairs(self, df: DataFrame, pairs: DataFrame, source: str):
+        source = f'market.{source}'
+        agg_pairs = pairs.where((F.col('market_1') == source) | (F.col('market_2') == source)) \
+            .groupby('item_key').agg(F.count('item_key').alias('counter')) \
+            .select('item_key', 'counter')
+
+        df_pairs = df.join(agg_pairs, agg_pairs.item_key == df.item_key, 'inner') \
+            .select(df.item_key, 'counter') \
+            .dropDuplicates(['item_key'])
+
+        return df_pairs
+
+    def purchased_by_day(self, df: DataFrame):
+        listColumns = df.columns
+        window = Window.partitionBy('item_key').orderBy(F.col('price_timestamp').desc())
+
+        if 'market_cup' in listColumns:
+            purchased_by_day = df.withColumn(
+                'delta_purchase',
+                F.col('market_cup') - F.lag(F.col('market_cup'), 1, 0).over(window)
+            ).withColumn('delta_purchase', F.when(F.col('delta_purchase') < 0, 0).otherwise(F.col('delta_purchase'))) \
+                .groupby('item_key') \
+                .agg(F.sum('delta_purchase').alias('purchased_by_day')) \
+                .select('item_key', 'purchased_by_day')
+        else:
+            purchased_by_day = df.groupby('item_key', 'price_timestamp') \
+              .agg(F.count('item_key').alias('market_cup')) \
+              .withColumn('delta_purchase', F.col('market_cup') - F.lag(F.col('market_cup'), 1, 0).over(window)) \
+              .withColumn('delta_purchase', F.when(F.col('delta_purchase') < 0, 0).otherwise(F.col('delta_purchase'))) \
+              .groupby('item_key') \
+              .agg(F.sum('delta_purchase').alias('purchased_by_day')) \
+              .select('item_key', 'purchased_by_day')
+
+        return purchased_by_day
+
 
 if __name__ == "__main__":
     spark = SparkCustomeSession()
     # spark._spark.sparkContext.setLogLevel('DEBUG')
-    spark.do_migration()
+    spark.agg_migration()
