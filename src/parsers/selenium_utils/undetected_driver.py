@@ -20,6 +20,7 @@ class AntiCloudflare:
         display.start()
 
         self._lang_changed = False
+        self._currency_changed = False
 
         self._options = Options()
         # self._options.headless = True
@@ -46,6 +47,10 @@ class AntiCloudflare:
             self._change_lang()
             self._driver.get(url)
 
+        if not self._currency_changed:
+            self.change_currency()
+            self._driver.get(url)
+
         html = self._driver.page_source
 
         return html
@@ -60,6 +65,16 @@ class AntiCloudflare:
         except Exception:
             pass
         self._lang_changed = True
+
+    def change_currency(self):
+        try:
+            usd = self._driver.find_element(By.XPATH, '/html/body/div[2]/header/div/div[1]')
+            ac = ActionChains(self._driver)
+            ac.move_to_element(usd)
+            rub = self._driver.find_element(By.XPATH, '/html/body/div[2]/header/div/div[1]/div[2]')
+            ac.move_to_element(rub).click().perform()
+        except Exception:
+            pass
 
     def __del__(self):
         self._driver.close()
