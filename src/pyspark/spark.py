@@ -3,30 +3,25 @@ import os
 from pyspark.sql import SparkSession
 import pandas as pd
 
-os.environ['PYSPARK_SUBMIT_ARGS'] = "--packages org.apache.hadoop:hadoop-aws:3.3.1," \
-                                    "com.amazonaws:aws-java-sdk-bundle:1.12.196" \
-                                    " pyspark-shell "
-
 
 class SparkCustomeSession:
-    POSTGRES_PATH = '/home/ubuntu/airflow/MarketCrawler/resources/postgresql-42.6.0.jar'
-    HADOOP_PATH = '/home/ubuntu/airflow/MarketCrawler/resources/hadoop-aws-3.3.1.jar'
-    S3_PATH = '/home/ubuntu/airflow/MarketCrawler/resources/aws-java-sdk-bundle-1.12.349.jar'
+    RESOURCES = '/home/ubuntu/airflow/MarketCrawler/resources'
+    JARS_PATH = f'{RESOURCES}/postgresql-42.6.0.jar,' \
+                f'{RESOURCES}/aws-java-sdk-bundle-1.12.196.jar,' \
+                f'{RESOURCES}/hadoop-aws-3.3.1.jar'
 
     def __init__(self):
-        # TODO Заменить доступ к кредам через переменные окружения
         self._spark = SparkSession.builder \
             .appName("MarketCrawler") \
             .master(f'spark://192.168.0.29:7077') \
-            .config("spark.shuffle.service.enabled", "false") \
-            .config("spark.hadoop.fs.s3a.endpoint", "https://127.0.0.1:9001") \
+            .config("spark.ui.port", "4041") \
+            .config("spark.hadoop.fs.s3a.endpoint", "http://192.168.0.29:9000") \
             .config("spark.hadoop.fs.s3a.access.key", "4OcB3gSxqzI1Ux1aVXmA") \
             .config("spark.hadoop.fs.s3a.secret.key", "alOms6aHTOODJMvZtJ6LPGrSbAlArgw3ROOYqv7D") \
+            .config("spark.hadoop.fs.s3a.ssl.enabled", "false") \
             .config("spark.hadoop.fs.s3a.path.style.access", True) \
             .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem") \
-            .config("spark.dynamicAllocation.enabled", "false") \
-            .config("spark.ui.enabled", "false") \
-            .config('spark.jars', self.POSTGRES_PATH) \
+            .config('spark.jars', self.JARS_PATH) \
             .getOrCreate()
 
     @property
@@ -47,11 +42,13 @@ class SparkCustomeSession:
 
     def s3_write(self):
         df = self._spark.createDataFrame(pd.DataFrame({'a': [1, 2, 3], 'b': [4, 2, 1]}))
-
-        df.write.format('csv').options(delimiter='|').mode('overwrite').save(
-            's3a://market/test.csv')
+        df.show()
+        # df = self._spark.read.csv("s3a://market/wireshark.csv")
+        # df.show()
+        df.write.format('csv').options(delimiter='|').mode('overwrite').save('s3a://market/test4.csv')
 
 
 if __name__ == "__main__":
     spark = SparkCustomeSession()
+    # spark._spark.sparkContext.setLogLevel('INFO')
     spark.s3_write()

@@ -38,7 +38,7 @@ class TradeIt:
         price = str(item["price"])
         parsed = {
             "name": item["name"].replace('StatTrak™', ''),
-            "price": round(float(f'{price[:-2]}.{price[-2:]}') * self._exchange_rate, 2),
+            "price": round(float(f'{price[:-2]}.{price[-2:]}') * self._exchange_rate, 2) * 0.65,
             "stattrack": item.get("hasStattrak"),
             "market_cup": item.get("currentStock"),
         }
