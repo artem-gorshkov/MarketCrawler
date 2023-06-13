@@ -122,7 +122,8 @@ class SparkCustomeSession:
                 .select('name', 'quality', F.coalesce('stattrack', F.lit(False)).alias('stattrack'),
                         F.round('volatility', 3).alias('volatility'), 'purchased_by_day', 'avg_price') \
                 .withColumn('period', F.lit(now.date())) \
-                .withColumn('market_name', F.lit(table))
+                .withColumn('market_name', F.lit(table)) \
+                .withColumn('weapon_name', F.split(F.regexp_replace(F.col('name'), '★ ', ''), '\s*\|\s*').getItem(0))
 
             self.jdbc_write(result)
 
