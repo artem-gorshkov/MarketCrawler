@@ -104,31 +104,28 @@ class SparkCustomeSession:
 
         for table in MIGRATION_TABLE_NAMES:
             for date in range(20230607, 20230613):
-                path = datetime.strptime(str(date), '%Y%m%d').strftime('%Y/%m/%d/') + table
-                self.do_agg_migration(etln, path, table)
+                date = datetime.strptime(str(date), '%Y%m%d')
+                self.do_agg_migration(etln, date, table)
 
     def agg_migration(self):
         etln = self.s3_read('item_etln')
 
         for table in MIGRATION_TABLE_NAMES:
-            path = self.create_path(table)
-            self.do_agg_migration(etln, path, table)
+            date = datetime.today() - timedelta(days=1)
+            self.do_agg_migration(etln, date, table)
 
-    def do_agg_migration(self, etln, path, table):
+    def do_agg_migration(self, etln, date, table):
+        path = date.strftime('%Y/%m/%d/') + table
         df = self.s3_read(path)
-        # pairs = self.s3_read('2023/06/12/pairs')
         volatility = self.item_volatility(df)
         purchased_by_day = self.purchased_by_day(df)
         avg_price = self.avg_price(df)
-        now = datetime.now() - timedelta(days=1)
-        # count_in_pairs = self.count_in_pairs(df, pairs, table)
-        # .join(count_in_pairs, count_in_pairs.item_key == etln.item_key, 'inner')
         result = etln.join(volatility, volatility.item_key == etln.item_key, 'inner') \
             .join(purchased_by_day, purchased_by_day.item_key == etln.item_key, 'inner') \
             .join(avg_price, avg_price.item_key == etln.item_key, 'inner') \
             .select('name', 'quality', F.coalesce('stattrack', F.lit(False)).alias('stattrack'),
                     F.round('volatility', 3).alias('volatility'), 'purchased_by_day', 'avg_price') \
-            .withColumn('period', F.lit(now.date())) \
+            .withColumn('period', F.lit(date.date())) \
             .withColumn('market_name', F.lit(table)) \
             .withColumn('weapon_name', F.split(F.regexp_replace(F.col('name'), '★ ', ''), '\s*\|\s*').getItem(0))
         self.jdbc_write(result)
@@ -185,4 +182,4 @@ class SparkCustomeSession:
 if __name__ == "__main__":
     spark = SparkCustomeSession()
     # spark._spark.sparkContext.setLogLevel('DEBUG')
-    spark.agg_migration()
+    spark.legacy_agg_migration()

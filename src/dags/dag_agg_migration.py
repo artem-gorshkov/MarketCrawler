@@ -33,7 +33,7 @@ with DAG(
         external_task_id='waiter',
         start_date=datetime(2020, 4, 29),
         execution_delta=timedelta(minutes=2),
-        timeout=3600,
+        timeout=20000,
     )
 
     agg_migrate_data = PythonOperator(

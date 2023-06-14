@@ -24,7 +24,7 @@ with DAG(
         start_date=datetime(2023, 5, 30),
         catchup=False,
         tags=["Dag migration"],
-        schedule_interval="10 3 * * *",
+        schedule_interval="@daily",
 ) as dag:
 
     def migrate():
