@@ -17,6 +17,8 @@ class AntiCloudflare:
     """
 
     def __init__(self):
+        display = Display(visible=False, size=(800, 800))
+        display.start()
 
         self._lang_changed = False
         self._currency_changed = False
