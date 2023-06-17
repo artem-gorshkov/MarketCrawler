@@ -1,6 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import requests
-
+from src.parsers.selenium_utils.selenium_utils import get_desired_driver
 from src.parsers.utils import form_item_key, get_quality
 
 
@@ -18,17 +17,17 @@ class TradeIt:
     }
 
     def __init__(self):
-        self._session = requests.Session()
+        self._session = get_desired_driver('special')
         self._get_exchange_rate()
 
     def _get_exchange_rate(self):
-        response = self._session.get(self.exchange_rate_url, headers=self.HEADER)
-        self._exchange_rate = response.json().get('rates').get('RUB')
+        response = self._session.simple_get(self.exchange_rate_url)
+        self._exchange_rate = response.get('rates').get('RUB')
 
     def _get_page(self, left: int, step: int):
         param = f"offset={left}&limit={step}"
-        response = self._session.get(self.URL + param, headers=self.HEADER)
-        items = response.json()["items"]
+        response = self._session.simple_get(self.URL + param)
+        items = response["items"]
 
         parsed_items = list(map(self._parse_item, items))
 
@@ -47,7 +46,6 @@ class TradeIt:
         parsed |= {"item_key": form_item_key(parsed)}
         return parsed
 
-
     @staticmethod
     def _create_intervals(n: int) -> tuple[list, int]:
         MAX_ITEMS = 10_000
@@ -57,13 +55,9 @@ class TradeIt:
 
     def update_market_status(self, n_workers=3):
         result = []
-        with ThreadPoolExecutor(max_workers=n_workers) as executor:
-            futures = []
-            intervals, step = self._create_intervals(n_workers)
-            for left in intervals:
-                futures.append(executor.submit(self._get_page, left, step))
-            for futures in as_completed(futures):
-                result.extend(futures.result())
+        intervals, step = self._create_intervals(n_workers)
+        for left in intervals:
+            result.append(self._get_page(left, step))
 
         return result
 

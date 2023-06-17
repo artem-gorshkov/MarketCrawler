@@ -1,3 +1,4 @@
+import json
 import time
 
 from pyvirtualdisplay import Display
@@ -16,8 +17,6 @@ class AntiCloudflare:
     """
 
     def __init__(self):
-        display = Display(visible=False, size=(800, 800))
-        display.start()
 
         self._lang_changed = False
         self._currency_changed = False
@@ -33,6 +32,13 @@ class AntiCloudflare:
             options=self._options,
             desired_capabilities=self._caps
         )
+
+    def simple_get(self, url: str):
+        self._driver.get(url)
+        time.sleep(6)
+        html = self._driver.find_element(By.TAG_NAME, 'pre').text
+        dict_json = json.loads(html)
+        return dict_json
 
     def get(self, url: str) -> str:
         """
